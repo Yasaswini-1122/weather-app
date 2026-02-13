@@ -2,80 +2,121 @@
 <html>
 <head>
     <title>Weather App</title>
-
     <style>
         body {
-            margin: 0;
-            padding: 0;
             font-family: Arial, sans-serif;
-            height: 100vh;
+            background: linear-gradient(to right, #2193b0, #6dd5ed);
             display: flex;
             justify-content: center;
             align-items: center;
-            background: linear-gradient(to right, #4facfe, #00f2fe);
+            height: 100vh;
+            margin: 0;
         }
 
-        .card {
-            background: rgba(255, 255, 255, 0.2);
-            padding: 40px;
+        .container {
+            background: white;
+            padding: 30px;
             border-radius: 15px;
-            width: 350px;
+            box-shadow: 0px 8px 20px rgba(0,0,0,0.2);
             text-align: center;
-            backdrop-filter: blur(10px);
-            color: white;
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+            width: 300px;
         }
 
-        h1 {
+        h2 {
             margin-bottom: 20px;
         }
 
+        input {
+            padding: 8px;
+            width: 80%;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            margin-bottom: 10px;
+        }
+
         button {
-            padding: 12px 25px;
-            font-size: 16px;
-            cursor: pointer;
-            background-color: #ff9800;
-            color: white;
+            padding: 8px 15px;
             border: none;
-            border-radius: 8px;
-            transition: 0.3s;
+            background: #2193b0;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
         }
 
         button:hover {
-            background-color: #e68900;
+            background: #176d82;
         }
 
-        #result {
-            margin-top: 25px;
-            font-size: 20px;
-            font-weight: bold;
+        .result {
+            margin-top: 15px;
+            font-size: 16px;
+        }
+
+        .loading {
+            color: gray;
+        }
+
+        .error {
+            color: red;
         }
     </style>
 </head>
-
 <body>
 
-    <div class="card">
-        <h1>Simple Weather App</h1>
-        <button onclick="getWeather()">Get Weather</button>
-        <div id="result"></div>
-    </div>
+<div class="container">
+    <h2>🌤 Weather App</h2>
 
-    <script>
-        async function getWeather() {
-            try {
-                const response = await fetch("https://api.open-meteo.com/v1/forecast?latitude=17.3850&longitude=78.4867&current_weather=true");
-                const data = await response.json();
+    <input type="text" id="city" placeholder="Enter City Name">
+    <br>
+    <button onclick="getWeather()">Get Weather</button>
 
-                document.getElementById("result").innerHTML =
-                    "Temperature: " + data.current_weather.temperature + "°C" +
-                    "<br>Wind Speed: " + data.current_weather.windspeed + " km/h" +
-                    "<br>Wind Direction: " + data.current_weather.winddirection + "°";
-            } catch (error) {
-                document.getElementById("result").innerText = "Error fetching weather data.";
-            }
+    <div class="result" id="result"></div>
+</div>
+
+<script>
+async function getWeather() {
+    const city = document.getElementById("city").value;
+    const resultDiv = document.getElementById("result");
+
+    if (city === "") {
+        resultDiv.innerHTML = "<p class='error'>Please enter a city name</p>";
+        return;
+    }
+
+    resultDiv.innerHTML = "<p class='loading'>Fetching weather...</p>";
+
+    try {
+        const geoResponse = await fetch(
+            `https://geocoding-api.open-meteo.com/v1/search?name=${city}&count=1`
+        );
+        const geoData = await geoResponse.json();
+
+        if (!geoData.results) {
+            resultDiv.innerHTML = "<p class='error'>City not found</p>";
+            return;
         }
-    </script>
+
+        const lat = geoData.results[0].latitude;
+        const lon = geoData.results[0].longitude;
+
+        const weatherResponse = await fetch(
+            `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`
+        );
+        const weatherData = await weatherResponse.json();
+
+        const temp = weatherData.current_weather.temperature;
+        const wind = weatherData.current_weather.windspeed;
+
+        resultDiv.innerHTML = `
+            <p><strong>City:</strong> ${city}</p>
+            <p><strong>Temperature:</strong> ${temp}°C</p>
+            <p><strong>Wind Speed:</strong> ${wind} km/h</p>
+        `;
+    } catch (error) {
+        resultDiv.innerHTML = "<p class='error'>Something went wrong</p>";
+    }
+}
+</script>
 
 </body>
 </html>
