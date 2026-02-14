@@ -22,3 +22,5 @@ Key aspects include:
 
 Completing this task helps interns understand **client-server communication**, asynchronous programming with `async/await`, and the basics of integrating APIs into modern web applications. It also emphasizes clean code practices, proper commenting, and professional documentation.
 
+
+OUTPUT: 
